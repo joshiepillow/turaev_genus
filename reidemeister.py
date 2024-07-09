@@ -1,20 +1,5 @@
-from functools import lru_cache
-
-gauss = [1, -2, 3, -1, 2, -3]
-
-#return edge in forward direction if it exists, otherwise return None
-def is_edge(gauss, edge):
-    edges = edge_list(gauss)
-    (a, b) = edge
-    if (a, b) in edges:
-        return (a, b)
-    if (b, a) in edges:
-        return (b, a)
-    return None
-
-def reverse(edge):
-    (a, b) = edge
-    return (b, a)
+#from functools import lru_cache
+from common import *
 
 def reverse_edge(gauss, edge):
     edge = is_edge(edge)
@@ -24,13 +9,6 @@ def reverse_edge(gauss, edge):
     out = gauss.copy()
     out[gauss.index(a)] = b
     out[gauss.index(b)] = a
-    return out
-
-#@lru_cache(maxsize=1)
-def edge_list(gauss):
-    out = []
-    for i in range(len(gauss)):
-        out.append((gauss[i], gauss[(i + 1) % len(gauss)]))
     return out
 
 def find_connected(edges, value):
@@ -63,69 +41,7 @@ def find_regions(gauss):
     return out
 '''
 
-#very unoptimized code for finding regions
-#returns a list of lists of edges which form the boundary of each region
-def find_regions(gauss):
-    regions = []
-    temp = gauss.copy()
 
-    #preprocessing to remove loops, i.e. edges of the form (n, -n)
-    for i in range(len(gauss)):
-        if gauss[i - 1] == -1 * gauss[i]:
-            temp.remove(gauss[i - 1])
-            temp.remove(gauss[i])
-            regions.append([gauss[i - 1], gauss[i]])
-
-    #generate every pair of edges that meet at perpendicularly at a crossing, i.e. ((x, y), (-y, z))
-    edge_pairs = []
-    for i in range(len(temp)):
-        if (temp[i] < 0):
-            continue
-        j = temp.index(-1 * temp[i])
-        l = len(temp)
-        edge_pairs.append(((temp[i - 1], temp[i]), (temp[j], temp[j - 1])))
-        edge_pairs.append(((temp[i - 1], temp[i]), (temp[j], temp[j + 1 - l])))
-        edge_pairs.append(((temp[i + 1 - l], temp[i]), (temp[j], temp[j - 1])))
-        edge_pairs.append(((temp[i + 1 - l], temp[i]), (temp[j], temp[j + 1 - l])))
-
-    #repeat while there are edge pairs remaining to traverse
-    while len(edge_pairs):
-        ((a, b), (c, d)) = edge_pairs.pop()
-        history = [a, b, c, d]
-
-        #repeat while the current path history isn't empty
-        while len(history):
-            (x, y) = (history[-2], history[-1])
-
-            #repeat while we haven't self intersected
-            while -1 * y not in history:
-                for ((a, b), (c, d)) in edge_pairs:
-                    if x == a and y == b:
-                        history += [c, d]
-                        edge_pairs.remove(((a, b), (c, d)))
-                        break
-                    elif x == d and y == c:
-                        history += [b, a]
-                        edge_pairs.remove(((a, b), (c, d)))
-                        break
-                else:
-                    print(edge_pairs, "\n", history, "\n", regions)
-                    raise Exception(1)
-                (x, y) = (history[-2], history[-1])
-
-            #otherwise, remove self intersection and add to our list of
-            i = history.index(-1 * y)
-            if ((x, y), (history[i], history[i+1])) in edge_pairs:
-                edge_pairs.remove(((x, y), (history[i], history[i+1])))
-            elif ((history[i + 1], history[i]), (y, x)) in edge_pairs:
-                edge_pairs.remove(((history[i + 1], history[i]), (y, x)))
-            else:
-                print(edge_pairs, "\n", history, "\n", regions)
-                raise Exception(2)
-            regions.append(history[i:])
-            history = history[:i]
-
-    return regions
             
 '''
 def all_type_1(gauss):
@@ -156,11 +72,26 @@ def type_3(gauss, crossing, edge):
     crossing_to_a = is_edge(crossing, -1 * a) or is_edge(-1 * crossing, -1 * a) 
     crossing_to_b = is_edge(crossing, -1 * b) or is_edge(-1 * crossing, -1 * b)
     return reverse_edge(reverse_edge(reverse_edge(gauss, (a, b)), (crossing_to_a)), crossing_to_b)
-'''
+
 def type_2(gauss, over_edge, under_edge):
+    over_edge = is_edge(gauss, over_edge)
+    under_edge = is_edge(gauss, under_edge)
+    print(over_edge, under_edge)
+    if not gauss or not over_edge or not under_edge:
+        return None
     regions = find_regions(gauss)
+    n = max(gauss) + 1
+    m = max(gauss) + 2
+    ((_, b), (_, d)) = (over_edge, under_edge)
     for region in regions:
-        is_edge
-'''
-print(type_1(gauss, (1, -2), True))
-print(find_regions(type_1(gauss, (1, -2), True)))
+        if (over_edge in region and under_edge in region) or (reverse(over_edge) in region and reverse(under_edge) in region):
+            #antiparallel
+            gauss = gauss[:gauss.index(b)] + [n, m] + gauss[gauss.index(b):]
+            gauss = gauss[:gauss.index(d)] + [-m, -n] + gauss[gauss.index(d):]
+            return gauss
+        elif (over_edge in region and reverse(under_edge) in region) or (reverse(over_edge) in region and under_edge in region):
+            #parallel
+            gauss = gauss[:gauss.index(b)] + [n, m] + gauss[gauss.index(b):]
+            gauss = gauss[:gauss.index(d)] + [-n, -m] + gauss[gauss.index(d):]
+            return gauss
+    return None
