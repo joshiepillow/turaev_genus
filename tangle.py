@@ -2,8 +2,11 @@ import subprocess
 def format_mathematica(l):
     return str(l).replace("[", "{").replace("]", "}")
 
-#takes a graph spec of form [[(v1, v2, (optional) id), (v1, v2, (optional) id), ...], [...], [...], ...]
-#returns a list of parities that give valid knots (i.e. not links)
+#the way to pass in a graph is really weird. for every vertex v_i, let E_i = [the list of edges with an end at v_i, passed as a tuple (a, b) or (a, b, id) where a < b]
+#then the graph G = [E_0, E_1, \dots, E_n]. 
+#for example, a triangle is g = [[(0, 1), (0, 2)], [(0,1), (1,2)], [(1,2), (0,2)]]
+
+#returns a list of parities that can be assigned to the edges resulting in 1 connected component (i.e. a knot, not a link)
 def check_all_parity(g):
     edges = []
     for v in g:
@@ -12,11 +15,12 @@ def check_all_parity(g):
                 edges.append(e)
     
     out = []
-    for i in range(2**len(edges)):
+    for i in range(2**len(edges)): #iterate over all assignments of parities of the number of half-twists assigned to each edge
         e_map = {}
         for e in edges:
             e_map[e] = 2 - (i % 2)
             i >>= 1
+        # e_map assigns to every edge 1 or 2 to represent parity
 
         temp = []
         for v in g:
@@ -29,6 +33,8 @@ def check_all_parity(g):
             out.append(list(e_map.values()))
     return out
 
+#given a graph g as defined above, an array of parities containing 1s and 2s, the maximum allowed magnitude of tangle count k, and an optional predicate
+#returns a list of all assignments of tangle count that satisfy that predicate 
 #k must be at least 4
 def generate_up_to_k(g, parities, k, predicate=lambda _: True):
     edges = []
@@ -77,7 +83,9 @@ def generate_up_to_k(g, parities, k, predicate=lambda _: True):
         parities[0] -= 2
     
     return out
-    
+
+# same as above but instead of passing in parities as an array of 1s and 2s, parities is an array with elements in {-2,-1,1,2}
+# where the program only checks assignments of tangle count that also agree in sign
 def generate_up_to_k_with_sign(g, parities, k, predicate=lambda _: True):
     edges = []
     for v in g:
@@ -118,10 +126,8 @@ def generate_up_to_k_with_sign(g, parities, k, predicate=lambda _: True):
         parities[0] -= 2
     
     return out
-    
 
-
-
+# takes in a graph g like above except E_i = [((v_i,v_j), edge_weight, (optional) id), ...]
 #gives gauss code after replacing each edge with `edge_weight` tangles
 def gauss_from_weighted_graph(g):
     edges = []

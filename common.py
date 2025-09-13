@@ -1,14 +1,19 @@
+# Input: gauss code as array
+# Output: array of pairs of adjacent elements as tuples
 def edge_list(gauss):
     out = []
     for i in range(len(gauss)):
         out.append((gauss[i], gauss[(i + 1) % len(gauss)]))
     return out
 
+# Input: edge as tuple
+# Output: reversed edge
 def reverse(edge):
     (a, b) = edge
     return (b, a)
 
-#return edge in forward direction if it exists, otherwise return None
+# Input: gauss code as array, edge as tuple
+# return edge in direction it appears in gauss code if it exists, otherwise return None
 def is_edge(gauss, edge):
     edges = edge_list(gauss)
     (a, b) = edge
@@ -18,7 +23,7 @@ def is_edge(gauss, edge):
         return (b, a)
     return None
 
-#very unoptimized code for finding regions
+#very unoptimized code for finding regions of a knot given its gauss code
 #returns a list of lists of edges which form the boundary of each region
 def find_regions(gauss):
     regions = []

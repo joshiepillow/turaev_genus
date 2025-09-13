@@ -1,5 +1,8 @@
 from tangle import *
 
+# given a 5 tuple of weights (a,b,c,d,e) such that a,b,c,d,e correspond to the left, second to left, second to right, right, and bottom tangle counts respectively
+# returns true if the tuple satisfies a condition i believe to be necessary and sufficient for the Jones polynomial to have leading and falling coefficient not 1
+# this condition is checked to be necessary and sufficient for |a|,|b|,|c|,|d|,|e|<=7, and sufficient for <=13 
 def is_valid_5_tuple(l):
     [a, b, c, d, e] = l
     if not (a < 0 and a % 2 == 1 and b < 0 and b % 2 == 1 and c < 0 and c % 2 == 0 and d > 0 and d % 2 == 1 and e > 0 and e % 2 == 1):
@@ -19,20 +22,31 @@ def is_valid_5_tuple(l):
         case _:
             return False
 
-
+# representation of the 2-2-1 triangle graph in my weird format
 (e010,e011,e020,e021,e12) = ((0,1,0), (0, 1, 1), (0, 2, 0), (0, 2, 1), (1, 2))
-g = [[e010, e011, e020, e021], [e12, e011, e010], [e12, e021, e020]]
+g = [[e010, e011, e020, e021], [e12, e011, e010], [e12, e021, e020]] 
+# by current evidence, the following parity (with signs) is necessary for the Jones polynomial to have leading and falling coef not 1 (up to mirror image)
 parities = [-1, -1, -2, 1, 1]
+
+
+# example of a set of working weights (w0, w1, ..., w4). the second and third line convert the weights to the graph form that gauss_from_weighted_graph accepts and prints the gauss code of the graph
 '''
 (w0, w1, w2, w3, w4) = [-3, -3, -10, 13, 11]
-(e010,e011,e020,e021,e12) = (((0,1),w0,0),((0,1),w1,1),((0,2),w2,0),((0,2),w3,1),((1, 2),w4))
+(e010,e011,e020,e021,e12) = (((0,1),w0,0),((0,1),w1,1),((0,2),w2,0),((0,2),w3,1),((1, 2),w4)) 
 print(gauss_from_weighted_graph([[e010, e011, e020, e021], [e12, e011, e010], [e12, e021, e020]]))
 '''
-#print(check_all_parity(g))
-ouch = generate_up_to_k_with_sign(g, parities, 20, predicate=is_valid_5_tuple)
-#subprocess.run("pbcopy", text=True, input=format_mathematica([b for (_, b) in ouch]))
-#print(len(ouch))
 
+#check which parity assignments to g give a connected link
+print(check_all_parity(g))
+
+#generate the gauss codes of all weight assignments such that the maximum weight is 20, then copies the list to clipboard using the pbcopy command in a Mathematica pasteable format
+'''
+gauss_codes_up_to_20 = generate_up_to_k_with_sign(g, parities, 20, predicate=is_valid_5_tuple)
+subprocess.run("pbcopy", text=True, input=format_mathematica([b for (_, b) in gauss_codes_up_to_20]))
+print(len(gauss_codes_up_to_20))
+'''
+
+# stuff i don't want to try to understand
 '''
 ouch = generate_up_to_k_with_sign(g, parities, 18)
 interesting = sorted([ouch[i-1][0] for i in [1, 10, 19, 28, 37, 46, 55, 64, 4225, 4234, 4243, 4252, 4261, 4270, \
